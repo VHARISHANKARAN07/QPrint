@@ -3,13 +3,39 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  SHOP_HANDLER
+}
+
+enum OrderStatus {
+  DRAFT
+  PDF_SENT
+  PAYMENT_PENDING
+  PAYMENT_SUBMITTED
+  PAYMENT_VERIFIED
+  CONFIRMED
+  WAITING
+  PRINTING
+  READY_FOR_COLLECTION
+  COLLECTED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PAYMENT_PENDING
+  PAYMENT_SUBMITTED
+  PAYMENT_VERIFIED
 }
 
 model User {
   id           String    @id @default(uuid())
-  role         String    // STUDENT, TEACHER, SHOP_HANDLER
+  role         UserRole
   name         String
   username     String?   @unique // For SHOP_HANDLER login
   mobile       String?   @unique // For STUDENT/TEACHER login (10-digit Indian mobile)
@@ -33,15 +59,15 @@ model User {
 model Order {
   id               String      @id @default(uuid())
   orderNumber      String      @unique // Format: QP-YYYY-NNNNNN
-  sequenceNumber   Int         @default(0)
+  sequenceNumber   Int         @default(autoincrement())
   userId           String
-  userRole         String      // STUDENT, TEACHER
+  userRole         UserRole
   pageCount        Int
   pricingTierId    String?
   appliedTierLabel String      // Snapshot: "51-100 pages"
-  pricePerPage     Float       // Snapshot at order time
-  totalAmount      Float       // Snapshot at order time
-  status           String      @default("DRAFT")
+  pricePerPage     Decimal     @db.Decimal(10, 2) // Snapshot at order time
+  totalAmount      Decimal     @db.Decimal(10, 2) // Snapshot at order time
+  status           OrderStatus @default(DRAFT)
   pdfSubmitted     Boolean     @default(false)
   pdfUrl           String?
   manualPriority   Boolean     @default(false)
@@ -65,8 +91,8 @@ model Order {
 model Payment {
   id               String        @id @default(uuid())
   orderId          String        @unique
-  amount           Float
-  paymentStatus    String        @default("PAYMENT_PENDING")
+  amount           Decimal       @db.Decimal(10, 2)
+  paymentStatus    PaymentStatus @default(PAYMENT_PENDING)
   paymentReference String?
   paymentTimestamp DateTime?
   verifiedAt       DateTime?
@@ -85,7 +111,7 @@ model PricingTier {
   id           String   @id @default(uuid())
   minimumPages Int
   maximumPages Int?     // null means unlimited (e.g., 101+)
-  pricePerPage Float
+  pricePerPage Decimal  @db.Decimal(10, 2)
   active       Boolean  @default(true)
   effectiveFrom DateTime @default(now())
   createdAt    DateTime @default(now())
