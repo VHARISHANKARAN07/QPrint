@@ -14,7 +14,7 @@ const handle = app.getRequestHandler();
 app.prepare().then(() => {
   // Main Next.js server
   const expressApp = express();
-  expressApp.all('*', (req, res) => handle(req, res));
+  expressApp.use((req: any, res: any) => handle(req, res));
 
   const nextServer = createServer(expressApp);
   nextServer.listen(port, () => {
@@ -57,7 +57,7 @@ app.prepare().then(() => {
   });
 
   // Internal API for Next.js API routes to emit events
-  socketApp.post('/internal/emit', (req, res) => {
+  socketApp.post('/internal/emit', (req: any, res: any) => {
     const { event, data } = req.body;
 
     if (!event) {

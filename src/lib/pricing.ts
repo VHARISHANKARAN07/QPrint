@@ -78,8 +78,10 @@ export async function validateTierRange(
           OR: [
             // Case 1: Existing tier's min falls within new range
             {
-              minimumPages: { gte: minimumPages },
-              minimumPages: maximumPages !== null ? { lte: maximumPages } : undefined,
+              minimumPages: {
+                gte: minimumPages,
+                ...(maximumPages !== null ? { lte: maximumPages } : {}),
+              },
             },
             // Case 2: New range's min falls within existing tier
             {

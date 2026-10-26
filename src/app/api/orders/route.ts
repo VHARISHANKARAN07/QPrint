@@ -53,13 +53,14 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Generate unique order number using sequence number
-      const orderNumber = generateOrderNumber(newOrder.sequenceNumber);
+      // Generate unique order number using order count
+      const count = await tx.order.count();
+      const orderNumber = generateOrderNumber(count + 1);
 
       // Update with the real order number
       const updatedOrder = await tx.order.update({
         where: { id: newOrder.id },
-        data: { orderNumber },
+        data: { orderNumber, sequenceNumber: count + 1 },
       });
 
       // Create payment record
@@ -159,8 +160,8 @@ export async function GET(request: NextRequest) {
     // Search by order number, name, or mobile
     if (search) {
       where.OR = [
-        { orderNumber: { contains: search, mode: 'insensitive' } },
-        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { orderNumber: { contains: search } },
+        { user: { name: { contains: search } } },
         { user: { mobile: { contains: search } } },
       ];
     }

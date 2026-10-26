@@ -1,7 +1,12 @@
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import bcrypt from 'bcryptjs';
 import { cookies } from 'next/headers';
-import { UserRole } from '@prisma/client';
+export const UserRole = {
+  STUDENT: 'STUDENT',
+  TEACHER: 'TEACHER',
+  SHOP_HANDLER: 'SHOP_HANDLER',
+} as const;
+export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.AUTH_SECRET || 'qprint-dev-secret-key-change-in-production-2026'

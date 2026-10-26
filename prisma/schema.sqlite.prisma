@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(uuid())
+  role         String    // STUDENT, TEACHER, SHOP_HANDLER
+  name         String
+  username     String?   @unique // For SHOP_HANDLER login
+  mobile       String?   @unique // For STUDENT/TEACHER login (10-digit Indian mobile)
+  passwordHash String
+  department   String?   // Student only
+  section      String?   // Student only
+  rollNumber   String?   // Student only
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  orders       Order[]
+  payments     Payment[] @relation("VerifiedByUser")
+  auditLogs    AuditLog[]
+  qrUploads    QRHistory[]
+
+  @@index([role])
+  @@index([mobile])
+  @@index([username])
+}
+
+model Order {
+  id               String      @id @default(uuid())
+  orderNumber      String      @unique // Format: QP-YYYY-NNNNNN
+  sequenceNumber   Int         @default(0)
+  userId           String
+  userRole         String      // STUDENT, TEACHER
+  pageCount        Int
+  pricingTierId    String?
+  appliedTierLabel String      // Snapshot: "51-100 pages"
+  pricePerPage     Float       // Snapshot at order time
+  totalAmount      Float       // Snapshot at order time
+  status           String      @default("DRAFT")
+  pdfSubmitted     Boolean     @default(false)
+  pdfUrl           String?
+  manualPriority   Boolean     @default(false)
+  printingStartedAt DateTime?
+  completedAt      DateTime?
+  collectedAt      DateTime?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  user             User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  pricingTier      PricingTier? @relation(fields: [pricingTierId], references: [id], onDelete: Restrict)
+  payment          Payment?
+
+  @@index([userId])
+  @@index([status])
+  @@index([userRole])
+  @@index([orderNumber])
+  @@index([createdAt])
+}
+
+model Payment {
+  id               String        @id @default(uuid())
+  orderId          String        @unique
+  amount           Float
+  paymentStatus    String        @default("PAYMENT_PENDING")
+  paymentReference String?
+  paymentTimestamp DateTime?
+  verifiedAt       DateTime?
+  verifiedBy       String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  order            Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  verifier         User?         @relation("VerifiedByUser", fields: [verifiedBy], references: [id], onDelete: Restrict)
+
+  @@index([paymentStatus])
+  @@index([orderId])
+}
+
+model PricingTier {
+  id           String   @id @default(uuid())
+  minimumPages Int
+  maximumPages Int?     // null means unlimited (e.g., 101+)
+  pricePerPage Float
+  active       Boolean  @default(true)
+  effectiveFrom DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders       Order[]
+
+  @@index([active])
+}
+
+model ShopSettings {
+  id                     String   @id @default(uuid())
+  shopName               String   @default("Xerox Shop")
+  contactNumber          String   @default("")
+  upiId                  String   @default("")
+  activeQrReference      String?
+  estimatedProcessingTime Int     @default(5) // minutes per order
+  updatedAt              DateTime @updatedAt
+}
+
+model QRHistory {
+  id            String    @id @default(uuid())
+  fileReference String
+  uploadedBy    String
+  uploadedAt    DateTime  @default(now())
+  active        Boolean   @default(true)
+  deactivatedAt DateTime?
+
+  uploader      User      @relation(fields: [uploadedBy], references: [id], onDelete: Restrict)
+
+  @@index([active])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String?
+  oldValue   String?  // JSON text
+  newValue   String?  // JSON text
+  createdAt  DateTime @default(now())
+
+  actor      User     @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([actorId])
+  @@index([entityType])
+  @@index([createdAt])
+}

@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# firebase
+.firebase/
+firebase-debug.log*
+
+# local database & uploads
+prisma/*.db
+prisma/*.db-journal
+uploads/

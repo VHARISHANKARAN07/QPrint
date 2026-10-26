@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { hashPassword, createToken, setSessionCookie } from '@/lib/auth';
+import { hashPassword, createToken, setSessionCookie, UserRole } from '@/lib/auth';
 import { validateMobile, validatePassword, validateName, sanitizeInput } from '@/lib/validators';
 import { createAuditLog, AuditActions, EntityTypes } from '@/lib/audit';
-import { UserRole } from '@prisma/client';
 
 export async function POST(request: NextRequest) {
   try {

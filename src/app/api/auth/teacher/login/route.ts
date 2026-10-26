@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyPassword, createToken, setSessionCookie } from '@/lib/auth';
+import { verifyPassword, createToken, setSessionCookie, UserRole } from '@/lib/auth';
 import { validateMobile, validatePassword } from '@/lib/validators';
 import { createAuditLog, AuditActions, EntityTypes } from '@/lib/audit';
-import { UserRole } from '@prisma/client';
 
 // Simple in-memory rate limiter
 const loginAttempts = new Map<string, { count: number; lastAttempt: number }>();

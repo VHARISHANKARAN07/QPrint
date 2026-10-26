@@ -25,9 +25,8 @@ const protectedRoutes: Record<string, string[]> = {
 
 // API route protection
 const protectedApiRoutes: Record<string, string[]> = {
-  '/api/student': ['STUDENT'],
-  '/api/teacher': ['TEACHER'],
-  '/api/shop': ['SHOP_HANDLER'],
+  '/api/shop/analytics': ['SHOP_HANDLER'],
+  '/api/shop/audit': ['SHOP_HANDLER'],
 };
 
 export async function middleware(request: NextRequest) {
